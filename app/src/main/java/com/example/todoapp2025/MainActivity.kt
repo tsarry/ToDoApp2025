@@ -20,6 +20,8 @@ import com.example.todoapp2025.data.Todo
 import com.example.todoapp2025.vm.*
 import java.text.SimpleDateFormat
 import java.util.*
+import android.content.Intent
+import androidx.compose.ui.platform.LocalContext
 
 class MainActivity : ComponentActivity() {
     private val factory by lazy { TodoVMFactory(application) }
@@ -58,6 +60,21 @@ fun App(vm: TodoViewModel = viewModel()) {
                     onToggle = vm::toggleComplete,
                     onDelete = vm::delete
                 )
+
+                // 👇 Add this block right here
+                val context = LocalContext.current
+
+                Button(
+                    onClick = {
+                        val intent = Intent(context, ReferenceActivity1::class.java)
+                        context.startActivity(intent)
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 16.dp)
+                ) {
+                    Text("Go to Cat Reference 🐱")
+                }
             }
         }
     }
