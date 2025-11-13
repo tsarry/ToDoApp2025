@@ -1,5 +1,6 @@
 package com.example.todoapp2025
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -8,20 +9,23 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.todoapp2025.data.Todo
 import com.example.todoapp2025.vm.*
 import java.text.SimpleDateFormat
 import java.util.*
-import android.content.Intent
-import androidx.compose.ui.platform.LocalContext
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     private val factory by lazy { TodoVMFactory(application) }
@@ -37,13 +41,52 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun App(vm: TodoViewModel = viewModel()) {
     val state by vm.state.collectAsState()
+    val drawerState = rememberDrawerState(DrawerValue.Closed)
+    val scope = rememberCoroutineScope()
+    val context = LocalContext.current
 
-    MaterialTheme {
+    ModalNavigationDrawer(
+        drawerState = drawerState,
+        drawerContent = {
+            ModalDrawerSheet {
+                Text(
+                    text = "Navigate",
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.padding(16.dp)
+                )
+
+                NavigationDrawerItem(
+                    label = { Text("Main") },
+                    selected = true,
+                    onClick = { scope.launch { drawerState.close() } },
+                    modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
+                )
+
+                NavigationDrawerItem(
+                    label = { Text("Cat") },
+                    selected = false,
+                    onClick = {
+                        scope.launch { drawerState.close() }
+                        val intent = Intent(context, ReferenceActivity1::class.java)
+                        context.startActivity(intent)
+                    },
+                    modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
+                )
+            }
+        }
+    ) {
         Scaffold(
             topBar = {
                 CenterAlignedTopAppBar(
                     title = { Text("To-Do") },
-                    actions = { SortMenu(state.sort, onPick = { vm.setSort(it, toggleAscIfSame = true) }) }
+                    navigationIcon = {
+                        IconButton(onClick = { scope.launch { drawerState.open() } }) {
+                            Icon(Icons.Filled.Menu, contentDescription = "Menu")
+                        }
+                    },
+                    actions = {
+                        SortMenu(state.sort, onPick = { vm.setSort(it, toggleAscIfSame = true) })
+                    }
                 )
             },
             bottomBar = {
@@ -58,23 +101,9 @@ fun App(vm: TodoViewModel = viewModel()) {
                 TodoList(
                     items = state.items,
                     onToggle = vm::toggleComplete,
-                    onDelete = vm::delete
+                    onDelete = vm::delete,
+                    modifier = Modifier.weight(1f)
                 )
-
-                // 👇 Add this block right here
-                val context = LocalContext.current
-
-                Button(
-                    onClick = {
-                        val intent = Intent(context, ReferenceActivity1::class.java)
-                        context.startActivity(intent)
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 16.dp)
-                ) {
-                    Text("Go to Cat Reference 🐱")
-                }
             }
         }
     }
@@ -103,7 +132,7 @@ fun SortMenu(current: SortSpec, onPick: (SortBy) -> Unit) {
 fun AddRow(onAdd: (String, String, Long?, Int) -> Unit) {
     var title by remember { mutableStateOf("") }
     var category by remember { mutableStateOf("") }
-    var dueText by remember { mutableStateOf("") }   // yyyy-MM-dd HH:mm (optional)
+    var dueText by remember { mutableStateOf("") }
     var priority by remember { mutableStateOf("3") }
 
     fun parseDue(): Long? = try {
@@ -136,14 +165,14 @@ fun AddRow(onAdd: (String, String, Long?, Int) -> Unit) {
 }
 
 @Composable
-fun TodoList(items: List<Todo>, onToggle: (Todo) -> Unit, onDelete: (Todo) -> Unit) {
+fun TodoList(items: List<Todo>, onToggle: (Todo) -> Unit, onDelete: (Todo) -> Unit, modifier: Modifier = Modifier) {
     if (items.isEmpty()) {
-        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        Box(modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Text("No items yet — add your first task!")
         }
         return
     }
-    LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    LazyColumn(modifier = modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
         items(items, key = { it.id }) { t ->
             TodoRow(t, onToggle, onDelete)
         }
