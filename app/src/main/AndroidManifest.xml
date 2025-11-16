@@ -12,6 +12,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.ToDo2025">
 
+        <!-- Splash is launcher -->
         <activity
             android:name=".SplashActivity"
             android:exported="true"
@@ -21,6 +22,11 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <activity
+            android:name=".ProfileActivity"
+            android:exported="true"
+            android:theme="@style/Theme.ToDo2025" />
 
         <activity
             android:name=".ReferenceActivity1"

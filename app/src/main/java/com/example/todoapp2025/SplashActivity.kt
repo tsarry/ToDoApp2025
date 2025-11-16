@@ -15,12 +15,16 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.draw.alpha
+import androidx.lifecycle.lifecycleScope
+import com.example.todoapp2025.data.ProfileRepository
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 
 class SplashActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -32,17 +36,22 @@ class SplashActivity : ComponentActivity() {
             }
         }
 
-        // Delay before launching MainActivity (1.5 seconds)
         Handler(Looper.getMainLooper()).postDelayed({
-            startActivity(Intent(this, MainActivity::class.java))
-            finish()
+            lifecycleScope.launch {
+                val name = ProfileRepository.getProfileName(this@SplashActivity).first()
+                if (name.isNullOrBlank()) {
+                    startActivity(Intent(this@SplashActivity, ProfileActivity::class.java))
+                } else {
+                    startActivity(Intent(this@SplashActivity, MainActivity::class.java))
+                }
+                finish()
+            }
         }, 1500)
     }
 }
 
 @Composable
 fun SplashScreen() {
-    // Optional: simple fade-in animation
     val alphaAnim = remember { Animatable(0f) }
     LaunchedEffect(Unit) {
         alphaAnim.animateTo(
@@ -54,7 +63,7 @@ fun SplashScreen() {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFF1E88E5)) // blue background
+            .background(Color(0xFF1E88E5))
             .padding(16.dp),
         contentAlignment = Alignment.Center
     ) {
@@ -62,9 +71,7 @@ fun SplashScreen() {
             Image(
                 painter = painterResource(id = R.drawable.ic_checklist),
                 contentDescription = "Logo",
-                modifier = Modifier
-                    .size(96.dp)
-                    .alpha(alphaAnim.value) // apply fade-in
+                modifier = Modifier.size(96.dp).alpha(alphaAnim.value)
             )
             Spacer(Modifier.height(16.dp))
             Text(
@@ -72,7 +79,7 @@ fun SplashScreen() {
                 color = Color.White,
                 fontSize = 28.sp,
                 fontWeight = FontWeight.Bold,
-                modifier = Modifier.alpha(alphaAnim.value) // apply fade-in
+                modifier = Modifier.alpha(alphaAnim.value)
             )
         }
     }

@@ -19,13 +19,13 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.todoapp2025.data.Todo
 import com.example.todoapp2025.vm.*
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlinx.coroutines.launch
+import com.example.todoapp2025.ui.AppDrawer
 
 class MainActivity : ComponentActivity() {
     private val factory by lazy { TodoVMFactory(application) }
@@ -45,37 +45,17 @@ fun App(vm: TodoViewModel = viewModel()) {
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
 
-    ModalNavigationDrawer(
+    // Use AppDrawer from AppDrawer.kt
+    AppDrawer(
         drawerState = drawerState,
-        drawerContent = {
-            ModalDrawerSheet {
-                Text(
-                    text = "Navigate",
-                    style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.padding(16.dp)
-                )
-
-                NavigationDrawerItem(
-                    label = { Text("Main") },
-                    selected = true,
-                    onClick = { scope.launch { drawerState.close() } },
-                    modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
-                )
-
-                NavigationDrawerItem(
-                    label = { Text("Cat") },
-                    selected = false,
-                    onClick = {
-                        scope.launch { drawerState.close() }
-                        val intent = Intent(context, ReferenceActivity1::class.java)
-                        context.startActivity(intent)
-                    },
-                    modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
-                )
-            }
-        }
-    ) {
+        scope = scope,
+        currentScreen = "Main",
+        onNavigateMain = { scope.launch { drawerState.close() } },
+        onNavigateCat = { context.startActivity(Intent(context, ReferenceActivity1::class.java)) },
+        onNavigateProfile = { context.startActivity(Intent(context, ProfileActivity::class.java)) }
+    ) { modifier ->
         Scaffold(
+            modifier = modifier,
             topBar = {
                 CenterAlignedTopAppBar(
                     title = { Text("To-Do") },

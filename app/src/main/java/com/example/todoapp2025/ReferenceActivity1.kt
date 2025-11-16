@@ -16,24 +16,20 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.launch
+import com.example.todoapp2025.ui.AppDrawer
 
 class ReferenceActivity1 : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
             MaterialTheme {
-                CatScreen(
-                    onNavigateToMain = {
-                        val intent = Intent(this, MainActivity::class.java)
-                        startActivity(intent)
-                        finish()
-                    }
-                )
+                CatScreen()
             }
         }
     }
@@ -41,59 +37,34 @@ class ReferenceActivity1 : ComponentActivity() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CatScreen(onNavigateToMain: () -> Unit) {
-    val scrollState = rememberScrollState()
+fun CatScreen() {
     val drawerState = rememberDrawerState(DrawerValue.Closed)
     val scope = rememberCoroutineScope()
+    val context = LocalContext.current
+    val scrollState = rememberScrollState()
 
-    ModalNavigationDrawer(
+    AppDrawer(
         drawerState = drawerState,
-        drawerContent = {
-            ModalDrawerSheet {
-                Text(
-                    text = "Navigate",
-                    style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.padding(16.dp)
-                )
-
-                NavigationDrawerItem(
-                    label = { Text("Main") },
-                    selected = false,
-                    onClick = {
-                        scope.launch { drawerState.close() }
-                        onNavigateToMain()
-                    },
-                    modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
-                )
-
-                NavigationDrawerItem(
-                    label = { Text("Cat") },
-                    selected = true,
-                    onClick = {
-                        // Already on Cat screen, just close the drawer
-                        scope.launch { drawerState.close() }
-                    },
-                    modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
-                )
-            }
+        scope = scope,
+        currentScreen = "Cat",
+        onNavigateMain = {
+            context.startActivity(Intent(context, MainActivity::class.java))
+        },
+        onNavigateCat = {
+            scope.launch { drawerState.close() } // already on Cat screen
+        },
+        onNavigateProfile = {
+            context.startActivity(Intent(context, ProfileActivity::class.java))
         }
-    ) {
+    ) { modifier ->
         Scaffold(
+            modifier = modifier,
             topBar = {
                 CenterAlignedTopAppBar(
                     title = { Text("Cat Screen") },
                     navigationIcon = {
-                        IconButton(
-                            onClick = {
-                                scope.launch {
-                                    drawerState.open()
-                                }
-                            }
-                        ) {
-                            Icon(
-                                imageVector = Icons.Filled.Menu,
-                                contentDescription = "Menu"
-                            )
+                        IconButton(onClick = { scope.launch { drawerState.open() } }) {
+                            Icon(Icons.Filled.Menu, contentDescription = "Menu")
                         }
                     }
                 )
@@ -110,9 +81,7 @@ fun CatScreen(onNavigateToMain: () -> Unit) {
                 Image(
                     painter = painterResource(id = R.drawable.cat2),
                     contentDescription = "Cute cat",
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .wrapContentHeight(),
+                    modifier = Modifier.fillMaxWidth().wrapContentHeight(),
                     contentScale = ContentScale.FillWidth
                 )
 
@@ -123,8 +92,7 @@ fun CatScreen(onNavigateToMain: () -> Unit) {
                             "napping in sunbeams, and pretending to ignore you until dinner time. " +
                             "Like all cats, she owns every room she walks into.",
                     style = MaterialTheme.typography.bodyLarge.copy(fontSize = 18.sp),
-                    textAlign = TextAlign.Justify,
-                    modifier = Modifier.padding(horizontal = 8.dp)
+                    textAlign = TextAlign.Justify
                 )
             }
         }
